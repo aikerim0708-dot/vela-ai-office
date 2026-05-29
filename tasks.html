@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Задачи — VELA AI Office</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <a class="header-back" href="/">← AI Office</a>
+    <h1>Задачи</h1>
+    <div class="subtitle" id="tasks-summary">Загрузка…</div>
+  </header>
+
+  <section class="section">
+    <div class="section-title">История запусков</div>
+    <div class="activity-list" id="tasks-list"></div>
+  </section>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="icon">⌂</div><div>Главная</div></a>
+    <a class="nav-item" href="/chat"><div class="icon">💬</div><div>Чат</div></a>
+    <a class="nav-item" href="/brain"><div class="icon">🧠</div><div>Brain</div></a>
+    <a class="nav-item" href="/reports"><div class="icon">📊</div><div>Отчёты</div></a>
+    <a class="nav-item" href="/more"><div class="icon">⚙</div><div>Ещё</div></a>
+  </nav>
+
+  <script src="/static/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", renderTasksPage);
+  </script>
+</body>
+</html>

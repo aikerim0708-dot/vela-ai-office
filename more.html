@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Ещё — VELA AI Office</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .info-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+    .info-card h3 { font-size: 14px; margin-bottom: 8px; color: var(--text); }
+    .info-card p { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+    .info-card .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .info-card .row:last-child { border-bottom: none; }
+    .info-card .row .label { color: var(--text-muted); }
+    .info-card .row .val { font-weight: 500; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-right: 6px; }
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <a class="header-back" href="/">← AI Office</a>
+    <h1>Ещё</h1>
+    <div class="subtitle">Информация и настройки</div>
+  </header>
+
+  <section class="section">
+    <div class="section-title">Статус системы</div>
+    <div class="info-card">
+      <div class="row"><span class="label">Провайдер агентов</span><span class="val" id="provider">—</span></div>
+      <div class="row"><span class="label">Агентов активно</span><span class="val" id="agents-count">—</span></div>
+      <div class="row"><span class="label">Сервер</span><span class="val"><span class="status-dot"></span>online</span></div>
+      <div class="row"><span class="label">Время</span><span class="val" id="server-time">—</span></div>
+    </div>
+
+    <div class="section-title">VELA AI Office</div>
+    <div class="info-card">
+      <h3>О проекте</h3>
+      <p>Адаптация AI Office (модуль 3 курса airoomclub.ru) под бизнес VELA на Wildberries. 5 агентов в Фазе 1 (пилот), 3 в Фазе 2.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Команда (Фаза 1)</h3>
+      <p>📊 Аналитик дня · 💰 Менеджер ставок · 🎯 Здоровье кластеров · 🧮 Юнит-экономист · 🧭 Координатор</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Текущая стадия</h3>
+      <p>Stage 3 — локальный запуск с MOCK-агентами. Stage 5 (реальные ответы через Claude API) и Stage 6 (деплой как Telegram Mini App) — впереди.</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Связанные топики Telegram</h3>
+      <p>Группа «VELA Office» с топиками: 📊 Утренний отчёт, 🎯 Кластеры, Ставки, Юнит экономика, Поставки, Карточки, Отзывы, Координатор, Алерты, Одобрения.</p>
+    </div>
+  </section>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="icon">⌂</div><div>Главная</div></a>
+    <a class="nav-item" href="/chat"><div class="icon">💬</div><div>Чат</div></a>
+    <a class="nav-item" href="/brain"><div class="icon">🧠</div><div>Brain</div></a>
+    <a class="nav-item" href="/reports"><div class="icon">📊</div><div>Отчёты</div></a>
+    <a class="nav-item active" href="/more"><div class="icon">⚙</div><div>Ещё</div></a>
+  </nav>
+
+  <script src="/static/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", renderMorePage);
+  </script>
+</body>
+</html>

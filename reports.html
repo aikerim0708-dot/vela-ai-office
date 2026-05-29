@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Отчёты — VELA AI Office</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    .reports-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .report-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px;
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .report-card:hover { border-color: var(--primary); }
+    .report-card .date { font-size: 13px; font-weight: 600; color: var(--text); }
+    .report-card .type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .report-card .summary { font-size: 12px; color: var(--text); margin-top: 6px; line-height: 1.4; }
+    .report-view {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; margin-top: 12px;
+      font-size: 13px; line-height: 1.6;
+      overflow-x: auto;
+    }
+    .report-view h1 { font-size: 18px; margin: 12px 0 8px; }
+    .report-view h2 { font-size: 15px; margin: 14px 0 6px; color: var(--primary); }
+    .report-view h3 { font-size: 13px; margin: 10px 0 4px; }
+    .report-view table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12px; }
+    .report-view th, .report-view td { border: 1px solid var(--border); padding: 4px 6px; text-align: right; }
+    .report-view th:first-child, .report-view td:first-child { text-align: left; }
+    .report-view th { background: var(--primary-light); }
+    .report-view code { background: var(--bg); padding: 2px 5px; border-radius: 4px; font-size: 11px; }
+    .report-view ul, .report-view ol { padding-left: 20px; margin: 6px 0; }
+    .report-view details { margin: 10px 0; }
+    .report-view summary { cursor: pointer; font-weight: 600; font-size: 12px; color: var(--primary); }
+    .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .btn-action {
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    }
+    .btn-action.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .empty { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a class="header-back" href="/">← AI Office</a>
+    <h1>📊 Отчёты</h1>
+    <div class="subtitle">Vela Daily, Weekly, Финансы — автоматически</div>
+  </header>
+
+  <section class="section">
+    <div class="actions">
+      <button class="btn-action primary" onclick="generateNow('daily')">⚡ Сгенерировать за вчера</button>
+      <button class="btn-action" onclick="generateNow('weekly')">📅 Weekly</button>
+      <button class="btn-action" onclick="generateNow('monthly')">💰 Monthly Finance</button>
+    </div>
+
+    <div id="status" style="margin-top:10px; font-size:12px; color:var(--text-muted)"></div>
+
+    <div class="reports-list" id="reports-list">
+      <div class="empty">Загрузка списка отчётов…</div>
+    </div>
+  </section>
+
+  <section class="section" id="view-section" style="display:none">
+    <div class="section-title">📄 <span id="view-title">Отчёт</span></div>
+    <div class="actions">
+      <button class="btn-action" onclick="shareToTelegram()">📤 Поделиться в Telegram</button>
+      <button class="btn-action" onclick="closeView()">✕ Закрыть</button>
+    </div>
+    <div class="report-view" id="report-view"></div>
+  </section>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="icon">⌂</div><div>Главная</div></a>
+    <a class="nav-item" href="/chat"><div class="icon">💬</div><div>Чат</div></a>
+    <a class="nav-item" href="/brain"><div class="icon">🧠</div><div>Brain</div></a>
+    <a class="nav-item active" href="/reports"><div class="icon">📊</div><div>Отчёты</div></a>
+    <a class="nav-item" href="/more"><div class="icon">⚙</div><div>Ещё</div></a>
+  </nav>
+
+  <script>
+    // Telegram WebApp SDK init
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      const tp = tg.themeParams || {};
+      if (tp.bg_color) document.documentElement.style.setProperty('--bg', tp.bg_color);
+      if (tp.text_color) document.documentElement.style.setProperty('--text', tp.text_color);
+      window.VELA_INIT_DATA = tg.initData || '';
+    }
+
+    let currentReportFilename = null;
+    let currentReportMd = null;
+
+    async function loadReportsList() {
+      try {
+        const r = await fetch('/api/reports');
+        const data = await r.json();
+        const reports = (data.reports || []).reverse(); // свежие сверху
+        const container = document.getElementById('reports-list');
+        if (reports.length === 0) {
+          container.innerHTML = '<div class="empty">Отчётов ещё нет. Нажмите «Сгенерировать за вчера».</div>';
+          return;
+        }
+        container.innerHTML = reports.map(r => `
+          <div class="report-card" onclick="openReport('${r.filename}', '${escapeJs(r.date || r.week_id || r.month || r.filename)}')">
+            <div class="date">${formatDate(r.date || r.week_id || r.month || r.filename)}</div>
+            <div class="type">${typeLabel(r.type)}</div>
+            ${r.summary_first_500 ? `<div class="summary">${escapeHtml(r.summary_first_500.slice(0, 200))}…</div>` : ''}
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('reports-list').innerHTML =
+          `<div class="empty">Ошибка загрузки: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function openReport(filename, dateLabel) {
+      setStatus('Загружаю отчёт…');
+      try {
+        const r = await fetch(`/api/reports/${encodeURIComponent(filename)}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        currentReportFilename = filename;
+        currentReportMd = data.markdown;
+        document.getElementById('view-title').textContent = dateLabel;
+        document.getElementById('report-view').innerHTML = mdToHtml(data.markdown);
+        document.getElementById('view-section').style.display = 'block';
+        document.getElementById('view-section').scrollIntoView({ behavior: 'smooth' });
+        setStatus('');
+      } catch (e) {
+        setStatus(`Ошибка: ${e.message}`);
+      }
+    }
+
+    function closeView() {
+      document.getElementById('view-section').style.display = 'none';
+      currentReportFilename = null;
+    }
+
+    async function generateNow(type) {
+      const btn = document.activeElement;
+      if (btn) btn.disabled = true;
+      setStatus(`Генерирую ${type}… это может занять 30-90 секунд`);
+      try {
+        const r = await fetch('/api/reports/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type }),
+        });
+        if (!r.ok) {
+          const errText = await r.text();
+          throw new Error(`HTTP ${r.status}: ${errText.slice(0, 200)}`);
+        }
+        await r.json();
+        setStatus(`✅ Отчёт ${type} готов`);
+        await loadReportsList();
+      } catch (e) {
+        setStatus(`❌ Ошибка: ${e.message}`);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function shareToTelegram() {
+      if (!currentReportMd) return;
+      if (tg && tg.sendData) {
+        // В Mini App можно отправить данные обратно боту
+        tg.sendData(JSON.stringify({
+          action: 'share_report',
+          filename: currentReportFilename,
+        }));
+      } else {
+        // Fallback — копируем ссылку
+        const url = `${location.origin}/reports?file=${currentReportFilename}`;
+        navigator.clipboard?.writeText(url);
+        setStatus('Ссылка скопирована в буфер');
+      }
+    }
+
+    function setStatus(text) {
+      document.getElementById('status').textContent = text;
+    }
+
+    // Простой markdown → HTML конвертер (без библиотек, чтобы не грузить лишнее)
+    function mdToHtml(md) {
+      let html = md
+        // Code blocks (fenced)
+        .replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${escapeHtml(code)}</code></pre>`)
+        // Headers
+        .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Inline code
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+        // HR
+        .replace(/^---$/gm, '<hr>');
+
+      // Tables (простой парсер)
+      html = html.replace(/((?:^\|.*\|$\n?)+)/gm, (block) => {
+        const rows = block.trim().split('\n').filter(r => r.trim());
+        if (rows.length < 2) return block;
+        const cells = rows.map(r => r.split('|').slice(1, -1).map(c => c.trim()));
+        // Вторая строка обычно --- разделитель
+        const hasHeader = cells[1] && cells[1].every(c => /^[-:\s]+$/.test(c));
+        const headerCells = hasHeader ? cells[0] : null;
+        const dataCells = hasHeader ? cells.slice(2) : cells;
+        let table = '<table>';
+        if (headerCells) {
+          table += '<tr>' + headerCells.map(c => `<th>${c}</th>`).join('') + '</tr>';
+        }
+        for (const row of dataCells) {
+          table += '<tr>' + row.map(c => `<td>${c}</td>`).join('') + '</tr>';
+        }
+        return table + '</table>';
+      });
+
+      // Lists (- item)
+      html = html.replace(/((?:^[-*] .*$\n?)+)/gm, (block) => {
+        const items = block.trim().split('\n').map(l => l.replace(/^[-*]\s+/, ''));
+        return '<ul>' + items.map(i => `<li>${i}</li>`).join('') + '</ul>';
+      });
+
+      // Paragraphs (двойные \n → разделитель)
+      html = html.split(/\n\n+/).map(p => {
+        if (p.startsWith('<h') || p.startsWith('<table') || p.startsWith('<ul') ||
+            p.startsWith('<pre') || p.startsWith('<hr') || p.startsWith('<details')) {
+          return p;
+        }
+        return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+      }).join('\n');
+
+      return html;
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"]/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
+      }[c]));
+    }
+
+    function escapeJs(s) {
+      return String(s || '').replace(/'/g, "\\'");
+    }
+
+    function formatDate(s) {
+      if (!s) return '—';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const [y, m, d] = s.split('-');
+        const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+        return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
+      }
+      if (s.startsWith('W')) return `Неделя ${s}`;
+      return s;
+    }
+
+    function typeLabel(t) {
+      return ({
+        daily: '📅 Vela Daily',
+        weekly: '🗓 Vela Weekly',
+        monthly: '💰 Финансовый месячный',
+      }[t]) || t;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadReportsList();
+      // Если есть ?file=... в URL — сразу открываем
+      const params = new URLSearchParams(location.search);
+      const file = params.get('file');
+      if (file) {
+        setTimeout(() => openReport(file, file), 300);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>AI Office / Чат</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="chat-body">
+  <header class="header">
+    <a class="header-back" href="/">← AI Office</a>
+    <h1 id="chat-title">Чат команды</h1>
+    <div class="chat-tabs">
+      <button class="chat-tab active" data-channel="group" onclick="switchChannel('group')">👥 Команда</button>
+      <button class="chat-tab" data-channel="max_dm" onclick="switchChannel('max_dm')">👨‍💼 Макс</button>
+    </div>
+  </header>
+
+  <div class="chat-thread" id="chat-thread">Загрузка…</div>
+
+  <div class="chat-input-bar">
+    <div class="chat-hint" id="chat-hint">Без @ — Макс созывает команду. С @Лео / @Зара — ответит один агент.</div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" rows="1" placeholder="Сообщение команде…"></textarea>
+      <button id="chat-send" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="icon">⌂</div><div>Главная</div></a>
+    <a class="nav-item active" href="/chat"><div class="icon">💬</div><div>Чат</div></a>
+    <a class="nav-item" href="/brain"><div class="icon">🧠</div><div>Brain</div></a>
+    <a class="nav-item" href="/reports"><div class="icon">📊</div><div>Отчёты</div></a>
+    <a class="nav-item" href="/more"><div class="icon">⚙</div><div>Ещё</div></a>
+  </nav>
+
+  <script src="/static/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", renderChatPage);
+  </script>
+</body>
+</html>

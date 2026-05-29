@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Агент — VELA AI Office</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <a class="header-back" href="/">← AI Office</a>
+    <h1 id="agent-name">Загрузка…</h1>
+    <div class="subtitle" id="agent-role">—</div>
+  </header>
+
+  <section class="section">
+    <div class="agent-hero" id="agent-hero">
+      <div class="avatar" id="agent-avatar">A</div>
+      <div class="name" id="agent-hero-name">—</div>
+      <div class="role" id="agent-hero-role">—</div>
+      <div class="metric" id="agent-metric">—</div>
+    </div>
+
+    <div class="section-title">Шаблоны задач</div>
+    <div class="template-list" id="template-list"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Запустить задачу</div>
+    <form class="task-form" id="task-form">
+      <textarea id="task-prompt" placeholder="Опиши задачу или выбери шаблон выше…"></textarea>
+      <button class="btn" type="submit">Запустить агента</button>
+    </form>
+
+    <div class="result-box" id="result-box" style="display: none;"></div>
+  </section>
+
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="icon">⌂</div><div>Главная</div></a>
+    <a class="nav-item" href="/chat"><div class="icon">💬</div><div>Чат</div></a>
+    <a class="nav-item" href="/brain"><div class="icon">🧠</div><div>Brain</div></a>
+    <a class="nav-item" href="/reports"><div class="icon">📊</div><div>Отчёты</div></a>
+    <a class="nav-item" href="/more"><div class="icon">⚙</div><div>Ещё</div></a>
+  </nav>
+
+  <script src="/static/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", renderAgentPage);
+  </script>
+</body>
+</html>

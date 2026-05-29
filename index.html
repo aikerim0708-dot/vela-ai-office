@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>VELA AI Office</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <header class="header">
+    <h1>AI Office</h1>
+    <div class="subtitle">Привет, Айкерим 🌙</div>
+  </header>
+
+  <!-- 1. ДАЙДЖЕСТ МАКСА — первое что видит Айкерим утром -->
+  <section class="section">
+    <div class="digest-card" id="digest-card">
+      <div class="digest-head">
+        <div class="digest-title"><span class="digest-avatar">👨‍💼</span> Дайджест Макса</div>
+        <div class="digest-date" id="digest-date">за вчера</div>
+      </div>
+      <div class="digest-kpis" id="digest-kpis">
+        <div class="dkpi">
+          <div class="dkpi-val" id="kpi-revenue-kzt">—</div>
+          <div class="dkpi-label">выручка ₸</div>
+        </div>
+        <div class="dkpi">
+          <div class="dkpi-val" id="kpi-orders">—</div>
+          <div class="dkpi-label">заказов</div>
+        </div>
+        <div class="dkpi">
+          <div class="dkpi-val" id="kpi-drr-razors">—</div>
+          <div class="dkpi-label">ДРР бритва</div>
+        </div>
+        <div class="dkpi">
+          <div class="dkpi-val" id="kpi-drr-lashes">—</div>
+          <div class="dkpi-label">ДРР ресницы</div>
+        </div>
+      </div>
+      <div class="digest-summary" id="digest-summary">Макс собирает утреннюю сводку…</div>
+      <a class="digest-link" href="/reports">📊 Открыть полный отчёт →</a>
+    </div>
+  </section>
+
+  <!-- 2. ЖДУТ ТВОЕГО РЕШЕНИЯ -->
+  <section class="section" id="decisions-section" style="display:none">
+    <div class="section-title">⚠️ Ждут твоего решения <span class="pill" id="decisions-count">0</span></div>
+    <div class="decisions-list" id="decisions-list"></div>
+  </section>
+
+  <!-- 3. ПОСТАВИТЬ ЦЕЛЬ МАКСУ -->
+  <section class="section">
+    <div class="goal-box">
+      <div class="head">
+        <div class="avatar">🎯</div>
+        <div class="meta">
+          <div class="name">Поставить цель Максу</div>
+          <div class="role">Ты ставишь цель — Макс ведёт команду от А до Б</div>
+        </div>
+      </div>
+      <textarea id="goal-input" placeholder="Например: «Подними прибыль ресниц до 20%», «Разберись с просевшим кластером», «План на неделю»…"></textarea>
+      <div class="quick-goals">
+        <div class="quick-goal" onclick="setGoal('Утренний отчёт за вчера: реклама, продажи, остатки, отзывы, план на сегодня')">📊 Утренний отчёт</div>
+        <div class="quick-goal" onclick="setGoal('Сводка по рекламе за вчера: ДРР по обеим кампаниям, какие кластеры просели, что подправить в ставках')">🦁 Реклама</div>
+        <div class="quick-goal" onclick="setGoal('Снапшот складов: где OOS-риск, что заказать у поставщика, как перераспределить остатки')">📦 Склады</div>
+        <div class="quick-goal" onclick="setGoal('Финансы за вчера: P&L, маржа, CAC по кампаниям, флаги')">💰 Финансы</div>
+      </div>
+      <button class="btn" onclick="postGoal()" id="goal-btn">Поставить цель</button>
+      <div class="hint">Макс делегирует Лео/Анне/Заре/Еве, соберёт итог. ~30-90 сек.</div>
+    </div>
+    <div class="goal-result" id="goal-result"></div>
+  </section>
+
+  <!-- 4. КОМАНДА -->
+  <section class="section">
+    <div class="section-title">Команда VELA</div>
+    <div class="team-grid" id="team-grid"></div>
+  </section>
+
+  <!-- 5. СВЁРНУТО: Inbox мозга -->
+  <section class="section">
+    <details class="fold">
+      <summary>📥 Inbox мозга <span class="pill" id="inbox-pending">0</span></summary>
+      <div class="inbox-box">
+        <textarea id="inbox-note" placeholder="Например: «снизила цену бритвы артикул 12345 с 1290 до 990», «WB поднял комиссию по бритвам», «у конкурента новая инфографика — скрин в файле»…"></textarea>
+        <div class="inbox-actions">
+          <label class="btn-secondary" for="inbox-file-input">📎 Файл (скрин/pdf)</label>
+          <input id="inbox-file-input" type="file" accept=".png,.jpg,.jpeg,.pdf,.txt,.md,.xlsx,.csv" style="display:none" onchange="uploadInboxFile(event)" />
+          <button class="btn-secondary" onclick="addInbox()">＋ Сохранить</button>
+          <button class="btn-secondary" onclick="processInbox()" id="inbox-process-btn">🧠 Макс, обработай</button>
+        </div>
+        <div class="inbox-list" id="inbox-list"></div>
+        <div class="hint">Макс прочтёт всё, классифицирует, обновит Brain, и при необходимости запустит реактивную цепочку.</div>
+      </div>
+    </details>
+  </section>
+
+  <!-- 6. СВЁРНУТО: WB-кабинет + файлы -->
+  <section class="section">
+    <details class="fold">
+      <summary>🛒 WB-кабинет <span class="wb-status" id="wb-status">—</span></summary>
+      <div class="wb-box" id="wb-box">
+        <div class="wb-actions">
+          <label class="btn-secondary" for="file-input">📎 Прикрепить Excel/CSV</label>
+          <input id="file-input" type="file" accept=".xlsx,.xls,.csv,.xlsm" style="display:none" onchange="uploadFile(event)" />
+          <button class="btn-secondary" onclick="checkWBHealth()">🔄 Проверить токен</button>
+        </div>
+        <div class="uploads-list" id="uploads-list"></div>
+        <div class="hint">Загруженные файлы агенты читают сами. Токен WB — в backend/.env.</div>
+      </div>
+    </details>
+  </section>
+
+  <!-- 7. СВЁРНУТО: Активность -->
+  <section class="section">
+    <details class="fold">
+      <summary>📈 Активность команды</summary>
+      <div class="activity-list" id="activity-list">
+        <div class="activity-item">
+          <div class="status-icon">…</div>
+          <div class="content">
+            <div class="title">Загрузка истории…</div>
+            <div class="meta">—</div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <nav class="bottom-nav">
+    <a class="nav-item active" href="/"><div class="icon">⌂</div><div>Главная</div></a>
+    <a class="nav-item" href="/chat"><div class="icon">💬</div><div>Чат</div></a>
+    <a class="nav-item" href="/brain"><div class="icon">🧠</div><div>Brain</div></a>
+    <a class="nav-item" href="/reports"><div class="icon">📊</div><div>Отчёты</div></a>
+    <a class="nav-item" href="/more"><div class="icon">⚙</div><div>Ещё</div></a>
+  </nav>
+
+  <script src="/static/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", renderHome);
+  </script>
+</body>
+</html>
